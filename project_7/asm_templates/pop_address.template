@@ -1,0 +1,9 @@
+// pop address
+
+@SP
+A=M-1
+D=M
+@<address>
+M=D
+@SP
+M=M+1

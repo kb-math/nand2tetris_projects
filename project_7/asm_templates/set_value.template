@@ -1,0 +1,6 @@
+// put <value> into RAM[<address>]
+
+@<value>
+D=A
+@<address>
+M=D

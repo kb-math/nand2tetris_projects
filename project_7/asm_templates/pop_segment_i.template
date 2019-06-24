@@ -1,0 +1,24 @@
+// pop <segment> <i>
+
+@SP
+M=M-1
+A=M
+D=M
+// save it for later in the temp, as we will need to put it in the right location in RAM
+@R13
+M=D
+
+@<segment_base_address_location>
+D=M
+@<i>
+D=D+A
+// So D is now the actual index of RAM where we want to place the value popped off the stack
+@R14
+M=D
+
+// finally place the saved value
+@R13
+D=M
+@R14
+A=M
+M=D
