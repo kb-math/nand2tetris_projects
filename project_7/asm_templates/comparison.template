@@ -1,0 +1,37 @@
+// <comparison>
+// assume x and y are top of the stack
+
+@SP
+M=M-1
+A=M
+D=M
+
+@SP
+M=M-1
+A=M
+
+D=M-D // so D = y-x here
+
+@jump_here_if_comparison_is_true
+D;<comparison_jump_symbol>
+
+// we go here <comparison> is false
+@SP
+A=M
+M=0 // 0 = false
+@end_comparison_block
+0;JEQ
+
+// we go here <comparison> is true
+(jump_here_if_comparison_is_true)
+@SP
+A=M
+M=-1 // -1 = true
+@end_comparison_block
+0;JEQ
+
+
+(end_comparison_block)
+@SP 
+M=M+1
+
