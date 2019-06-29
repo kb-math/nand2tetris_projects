@@ -31,7 +31,7 @@ with open("asm_templates/comparison.template") as f:
 
 BASE_ADDRESS_LOCATIONS = {"stack":0, "local": 1, "argument": 2, "this":3, "that": 4}
 
-FIXED_BASES = {"temp": 5, "static": 16}
+FIXED_BASES = {"pointer": 3, "temp": 5, "static": 16}
 
 OPERATIONS = {"add": "+", "sub": "-", "or": "|", "and": "&"}
 
