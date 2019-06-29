@@ -1,4 +1,4 @@
-// pop <segment> <i>
+// pop <fixed_segment> <i>
 
 @SP
 M=M-1
@@ -8,8 +8,8 @@ D=M
 @R13
 M=D
 
-@<segment_base_address_location>
-D=M
+@<fixed_segment_base>
+D=A
 @<i>
 D=D+A
 // So D is now the actual index of RAM where we want to place the value popped off the stack

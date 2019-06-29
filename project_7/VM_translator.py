@@ -14,6 +14,12 @@ with open("asm_templates/push_segment_i.template") as f:
 with open("asm_templates/pop_segment_i.template") as f:
 	pop_segment_i_template = f.read()
 
+with open("asm_templates/push_fixed_segment_i.template") as f:
+	push_fixed_segment_i_template = f.read()
+
+with open("asm_templates/pop_fixed_segment_i.template") as f:
+	pop_fixed_segment_i_template = f.read()
+
 with open("asm_templates/arithmetic.template") as f:
 	arithmetic_template = f.read()
 
@@ -23,9 +29,9 @@ with open("asm_templates/unary.template") as f:
 with open("asm_templates/comparison.template") as f:
 	comparison_template = f.read()
 
-BASE_ADDRESS_LOCATIONS = {"stack":0, "local": 1, "argument": 2, "pointer":3, "temp": 5, "static": 16}
+BASE_ADDRESS_LOCATIONS = {"stack":0, "local": 1, "argument": 2, "this":3, "that": 4}
 
-INITIAL_POINTERS = {"stack": 256, "local": 300, "argument": 400}
+FIXED_BASES = {"temp": 5, "static": 16}
 
 OPERATIONS = {"add": "+", "sub": "-", "or": "|", "and": "&"}
 
@@ -51,20 +57,43 @@ def push_constant_code(i):
 	return code_str
 
 def push_segment_i_code(segment, i):
-	code_str = str(push_segment_i_template)
-	segment_base_address_location = BASE_ADDRESS_LOCATIONS[segment]
-	code_str = code_str.replace("<segment>", str(segment))
-	code_str = code_str.replace("<segment_base_address_location>", str(segment_base_address_location))
-	code_str = code_str.replace("<i>", str(i))
+	#quite annoying that temp and static don't have a pointer like LCL, ARG etc.
+	#requires a different code
+	if segment in FIXED_BASES.keys():
+		code_str = str(push_fixed_segment_i_template)
+		segment_base = FIXED_BASES[segment]
+		code_str = code_str.replace("<fixed_segment>", str(segment))
+		code_str = code_str.replace("<fixed_segment_base>", str(segment_base))
+		code_str = code_str.replace("<i>", str(i))
+	elif segment in BASE_ADDRESS_LOCATIONS.keys():
+		code_str = str(push_segment_i_template)
+		segment_base_address_location = BASE_ADDRESS_LOCATIONS[segment]
+		code_str = code_str.replace("<segment>", str(segment))
+		code_str = code_str.replace("<segment_base_address_location>", str(segment_base_address_location))
+		code_str = code_str.replace("<i>", str(i))
+	else:
+		raise Exception ("unknown segment", segment) 
 
 	return code_str
 
+#TODO: code duplication with pop and push? (apart from template name really)
 def pop_segment_i_code(segment, i):
-	code_str = str(pop_segment_i_template)
-	segment_base_address_location = BASE_ADDRESS_LOCATIONS[segment]
-	code_str = code_str.replace("<segment>", str(segment))
-	code_str = code_str.replace("<segment_base_address_location>", str(segment_base_address_location))
-	code_str = code_str.replace("<i>", str(i))
+	#quite annoying that temp and static don't have a pointer like LCL, ARG etc.
+	#requires a different code
+	if segment in FIXED_BASES.keys():
+		code_str = str(pop_fixed_segment_i_template)
+		segment_base = FIXED_BASES[segment]
+		code_str = code_str.replace("<fixed_segment>", str(segment))
+		code_str = code_str.replace("<fixed_segment_base>", str(segment_base))
+		code_str = code_str.replace("<i>", str(i))
+	elif segment in BASE_ADDRESS_LOCATIONS.keys():
+		code_str = str(pop_segment_i_template)
+		segment_base_address_location = BASE_ADDRESS_LOCATIONS[segment]
+		code_str = code_str.replace("<segment>", str(segment))
+		code_str = code_str.replace("<segment_base_address_location>", str(segment_base_address_location))
+		code_str = code_str.replace("<i>", str(i))
+	else:
+		raise Exception ("unknown segment", segment)
 
 	return code_str
 
@@ -132,8 +161,7 @@ def read_vm_code_line(code_line):
 
 		if first_keyword == "pop":
 			second_keyword = code_split[1]
-			if second_keyword in BASE_ADDRESS_LOCATIONS.keys():
-				return pop_segment_i_code(second_keyword, code_split[2])
+			return pop_segment_i_code(second_keyword, code_split[2])
 		if first_keyword in OPERATIONS.keys():
 			return arithmetic_code(first_keyword)
 		if first_keyword in OPERATORS.keys():
