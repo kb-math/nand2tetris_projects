@@ -1,6 +1,7 @@
 #chapter 7 and 8 of nand2tetris
 
 import argparse
+import os
 
 with open("asm_templates/set_value.template") as f:
 	set_value_template = f.read()
@@ -47,9 +48,49 @@ OPERATORS = {"not": "!", "neg": "-"}
 COMPARISONS = {"lt": "JLT", "eq": "JEQ", "gt": "JGT"}
 
 class AssemblyCodeGenerator(object):
-	def __init__(self):
+	def __init__(self, output_asm_file_path):
 		self._LABEL_COUNTER = 0
-		self._current_vm_file = ""
+		self._output_asm_file = open(output_asm_file_path, 'wa')
+		self._current_vm_fname = ""
+
+	def close_output_file(self):
+		self._output_asm_file.close()
+
+	def open_vm_file(self, file_path):
+		with open(file_path) as f:
+			source_code = f.read()
+		
+		#clear from previous file
+		self._source_code_lines = []
+		self._source_code_lines = source_code.split("\n")
+
+		self._current_vm_fname = os.path.basename(file_path)
+
+	def translate_file(self, file_path):
+		line_number = 1
+		self.open_vm_file(file_path)
+		for code_line in self._source_code_lines:
+			try:
+				asm_code_line = self.read_vm_code_line(code_line)
+			except Exception as e:
+				print "failed at line", line_number, "in file", file_path
+				self._output_asm_file.write("COMPILATION_FAILED!")
+				raise Exception(str(e))
+		
+			self._output_asm_file.write(asm_code_line + "\n")
+			line_number += 1
+
+
+	def create_static_name(self, i):
+		return self._current_vm_fname + ".static." + str(i)
+
+	def create_label(self, original_label):
+		#To prevent name clashes from different instances of same template
+		# we pre-append with label_LABEL_COUNTER- and increment LABEL_COUNTER
+		new_label = "label_" + str(self._LABEL_COUNTER) + "-" + original_label
+		self._LABEL_COUNTER += 1
+		return new_label
+
 
 	#put <value> into RAM[<address>]
 	def set_value_code(self, address, value):
@@ -131,14 +172,12 @@ class AssemblyCodeGenerator(object):
 		# replace <label> with string label_<self._LABEL_COUNTER>_label and increment to avoid
 		#clashes between labels
 		label = "jump_here_if_comparison_is_true"
-		label_indexed = "label_" + str(self._LABEL_COUNTER) + "_" + label
+		label_indexed = self.create_label(label)
 		code_str = code_str.replace(label, label_indexed)
-		self._LABEL_COUNTER += 1
 
 		label = "end_comparison_block"
-		label_indexed = "label_" + str(self._LABEL_COUNTER) + "_" + label
+		label_indexed = self.create_label(label)
 		code_str = code_str.replace(label, label_indexed)
-		self._LABEL_COUNTER += 1
 
 		return code_str
 
@@ -188,26 +227,14 @@ if __name__ == '__main__':
 	parser.add_argument('vm_code_file', help = ".vm file path to be translated to .asm")
 
 	args = parser.parse_args()
-
-	code_generator = AssemblyCodeGenerator()
-
 	source_code_fname = args.vm_code_file
-	with open(source_code_fname) as f:
-		source_code = f.read()
-		source_code_lines = source_code.split("\n")
 
-	line_number = 1
-	with open(source_code_fname + ".asm", 'wa') as output_asm_file:
-		for code_line in source_code_lines:
-			try:
-				asm_code_line = code_generator.read_vm_code_line(code_line)
-			except Exception as e:
-				print "failed at line", line_number
-				output_asm_file.write("COMPILATION_FAILED!")
-				raise Exception(str(e))
-		
-			output_asm_file.write(asm_code_line + "\n")
-			line_number += 1
+	output_file_path = source_code_fname + ".asm"
+	code_generator = AssemblyCodeGenerator(output_file_path)
+
+	code_generator.translate_file(source_code_fname)
+
+	code_generator.close_output_file()
 
 	print "finished compiling ", source_code_fname
 
