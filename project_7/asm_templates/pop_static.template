@@ -1,0 +1,9 @@
+// pop <static>
+
+@SP
+A=M-1
+D=M
+@<static>
+M=D
+@SP
+M=M+1

@@ -109,7 +109,12 @@ class AssemblyCodeGenerator(object):
 	def push_segment_i_code(self, segment, i):
 		#quite annoying that temp and static don't have a pointer like LCL, ARG etc.
 		#requires a different code
-		if segment in FIXED_BASES.keys():
+		if segment == "static":
+			static_var_name = self.create_static_name(i)
+			code_str = str(push_static_template)
+			code_str = code_str.replace("<static>", static_var_name)
+
+		elif segment in FIXED_BASES.keys():
 			code_str = str(push_fixed_segment_i_template)
 			segment_base = FIXED_BASES[segment]
 			code_str = code_str.replace("<fixed_segment>", str(segment))
@@ -130,7 +135,11 @@ class AssemblyCodeGenerator(object):
 	def pop_segment_i_code(self, segment, i):
 		#quite annoying that temp and static don't have a pointer like LCL, ARG etc.
 		#requires a different code
-		if segment in FIXED_BASES.keys():
+		if segment == "static":
+			static_var_name = self.create_static_name(i)
+			code_str = str(pop_static_template)
+			code_str = code_str.replace("<static>", static_var_name)
+		elif segment in FIXED_BASES.keys():
 			code_str = str(pop_fixed_segment_i_template)
 			segment_base = FIXED_BASES[segment]
 			code_str = code_str.replace("<fixed_segment>", str(segment))
