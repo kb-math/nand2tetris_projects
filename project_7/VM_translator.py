@@ -36,6 +36,12 @@ with open("asm_templates/unary.template") as f:
 with open("asm_templates/comparison.template") as f:
 	comparison_template = f.read()
 
+with open("asm_templates/ifgoto.template") as f:
+	ifgoto_template = f.read()
+
+with open("asm_templates/ifgoto.template") as f:
+	goto_template = f.read()
+
 BASE_ADDRESS_LOCATIONS = {"stack":0, "local": 1, "argument": 2, "this":3, "that": 4}
 
 FIXED_BASES = {"pointer": 3, "temp": 5, "static": 16}
@@ -62,6 +68,7 @@ class AssemblyCodeGenerator(object):
 		
 		#clear from previous file
 		self._source_code_lines = []
+
 		self._source_code_lines = source_code.split("\n")
 
 		self._current_vm_fname = os.path.basename(file_path)
@@ -130,6 +137,25 @@ class AssemblyCodeGenerator(object):
 			raise Exception ("unknown segment", segment) 
 
 		return code_str
+
+	#branching
+	def label_code(self, label):
+		new_label = self._current_vm_fname + "-label"
+
+		return "(" + new_label + ")"
+
+	def ifgoto_code(self, label):
+		new_label = self._current_vm_fname + "-label"
+		code_str = str(ifgoto_template)
+		code_str = code_str.replace("<label>", new_label)
+		return code_str
+
+	def goto_code(self, label):
+		new_label = self._current_vm_fname + "-label"
+		code_str = str(goto_template)
+		code_str = code_str.replace("<label>", new_label)
+		return code_str
+
 
 	#TODO: code duplication with pop and push? (apart from template name really)
 	def pop_segment_i_code(self, segment, i):

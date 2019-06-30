@@ -1,0 +1,4 @@
+// goto <label>
+
+@<label>
+D;JNE
