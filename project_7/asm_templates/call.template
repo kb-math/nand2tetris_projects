@@ -1,0 +1,68 @@
+// call <functionName> <nArgs>
+
+//push retAddrLabel <retAddrLabel>
+@<retAddrLabel>
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+//push LCL // Saves LCL of the caller
+@<local_base_address_location>
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+//push ARG // Saves ARG of the caller
+@<argument_base_address_location>
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+//push THIS // Saves THIS of the caller
+@<THIS_location>
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+//push THAT // Saves THAT of the caller
+@<THAT_location>
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+//ARG = SP-5-nArgs // Repositions ARG
+@SP
+D=M
+@5
+D=D-A
+@<nArgs>
+D=D-A
+@<local_base_address_location>
+M=D
+
+//LCL = SP // Repositions LCL
+@SP
+D=M
+@<local_base_address_location>
+M=D
+
+//goto <functionName> // Transfers control to the called function
+@<functionName_label>
+0;JEQ
+
+(<retAddrLabel>)

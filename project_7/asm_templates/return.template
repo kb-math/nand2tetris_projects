@@ -1,0 +1,54 @@
+// return
+
+// save endframe in R13
+@<local_base_address_location>
+D=M
+@R13
+M=D
+
+// pop argument 0
+@SP
+M=M-1
+A=M
+D=M
+@<argument_base_address_location>
+A=M
+M=D
+
+// SP = ARG + 1
+@<argument_base_address_location>
+D=M
+@SP
+M=D+1
+
+// THAT = *(endframe - 1) etc.
+@R13
+DM=M-1
+@<THAT_location>
+M=D
+
+@R13
+DM=M-1
+@<THIS_location>
+M=D
+
+@R13
+DM=M-1
+@<argument_base_address_location>
+M=D
+
+@R13
+DM=M-1
+@<local_base_address_location>
+M=D
+
+// goto retAddr = *(endFrame - 5)
+@R13
+A=M-1
+0;JEQ
+
+
+
+
+
+

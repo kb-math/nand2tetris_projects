@@ -39,12 +39,18 @@ with open("asm_templates/comparison.template") as f:
 with open("asm_templates/ifgoto.template") as f:
 	ifgoto_template = f.read()
 
-with open("asm_templates/ifgoto.template") as f:
+with open("asm_templates/goto.template") as f:
 	goto_template = f.read()
+
+with open("asm_templates/return.template") as f:
+	return_template = f.read()
+
+with open("asm_templates/call.template") as f:
+	call_template = f.read()
 
 BASE_ADDRESS_LOCATIONS = {"stack":0, "local": 1, "argument": 2, "this":3, "that": 4}
 
-FIXED_BASES = {"pointer": 3, "temp": 5, "static": 16}
+FIXED_BASES = {"pointer": 3, "temp": 5}
 
 OPERATIONS = {"add": "+", "sub": "-", "or": "|", "and": "&"}
 
@@ -138,23 +144,6 @@ class AssemblyCodeGenerator(object):
 
 		return code_str
 
-	#branching
-	def label_code(self, label):
-		new_label = self._current_vm_fname + "-label"
-
-		return "(" + new_label + ")"
-
-	def ifgoto_code(self, label):
-		new_label = self._current_vm_fname + "-label"
-		code_str = str(ifgoto_template)
-		code_str = code_str.replace("<label>", new_label)
-		return code_str
-
-	def goto_code(self, label):
-		new_label = self._current_vm_fname + "-label"
-		code_str = str(goto_template)
-		code_str = code_str.replace("<label>", new_label)
-		return code_str
 
 
 	#TODO: code duplication with pop and push? (apart from template name really)
@@ -216,6 +205,63 @@ class AssemblyCodeGenerator(object):
 
 		return code_str
 
+	#branching
+	def label_code(self, label):
+		new_label = self._current_vm_fname + "-label_" + label
+
+		return "(" + new_label + ")"
+
+	def ifgoto_code(self, label):
+		new_label = self._current_vm_fname + "-label_" + label
+		code_str = str(ifgoto_template)
+		code_str = code_str.replace("<label>", new_label)
+		return code_str
+
+	def goto_code(self, label):
+		new_label = self._current_vm_fname + "-label_" + label
+		code_str = str(goto_template)
+		code_str = code_str.replace("<label>", new_label)
+		return code_str
+
+	# function call and return
+	def return_code(self):
+		local_base_address_location = BASE_ADDRESS_LOCATIONS["local"]
+		argument_base_addres_location = BASE_ADDRESS_LOCATIONS["argument"]
+		this_location = BASE_ADDRESS_LOCATIONS["this"]
+		that_location = BASE_ADDRESS_LOCATIONS["that"]
+
+		code_str = str(return_template)
+		code_str = code_str.replace("<local_base_address_location>", str(local_base_address_location))
+		code_str = code_str.replace("<argument_base_addres_location>", str(argument_base_addres_location))
+		code_str = code_str.replace("<THIS_location>", str(this_location))
+		code_str = code_str.replace("<THAT_location>", str(that_location))
+
+		return code_str
+
+	def call_code(self, function_name, arg_count):
+		local_base_address_location = BASE_ADDRESS_LOCATIONS["local"]
+		argument_base_addres_location = BASE_ADDRESS_LOCATIONS["argument"]
+		this_location = BASE_ADDRESS_LOCATIONS["this"]
+		that_location = BASE_ADDRESS_LOCATIONS["that"]
+
+		code_str = str(code_template)
+		code_str = code_str.replace("<local_base_address_location>", str(local_base_address_location))
+		code_str = code_str.replace("<argument_base_addres_location>", str(argument_base_addres_location))
+		code_str = code_str.replace("<THIS_location>", str(this_location))
+		code_str = code_str.replace("<THAT_location>", str(that_location))
+		code_str = code_str.replace("<functionName>", str(function_name))
+
+		function_name_label = "function-label_" + function_name
+		return_addr_label = "return-addr-label_" + function_name
+
+		code_str = code_str.replace("<functionName_label>", str(function_name_label))
+		code_str = code_str.replace("<retAddrLabel>", str(return_addr_label))
+		code_str = code_str.replace("<nArgs>", str(arg_count))
+
+		return code_str
+
+	def function_code(self, function_name, local_var_count):
+		pass
 
 	def read_vm_code_line(self, code_line):
 		code_split = [x for x in str(code_line).split() if x != ""]
@@ -249,6 +295,16 @@ class AssemblyCodeGenerator(object):
 				return self.operator_code(first_keyword)
 			if first_keyword in COMPARISONS.keys():
 				return self.comparison_code(first_keyword)
+			if first_keyword == "label":
+				second_keyword = code_split[1]
+				return self.label_code(second_keyword)
+			if first_keyword == "if-goto":
+				second_keyword = code_split[1]
+				return self.ifgoto_code(second_keyword)
+			if first_keyword == "goto":
+				second_keyword = code_split[1]
+				return self.goto_code(second_keyword)
+				
 		except Exception as e:
 			print str(e)
 
